@@ -1,7 +1,7 @@
 # mcp-router
 
-One MCP server in front of many. Claude Code loads two tools — `find_tools` and
-`call_tool` — instead of every tool from every server. Downstream servers start
+One MCP server in front of many. Claude Code loads three tools — `find_tools`,
+`call_tool` and `run_script` — instead of every tool from every server. Downstream servers start
 only when first used; their tool lists are cached in `~/Library/Caches/mcp-router`.
 
 - **Fewer tokens:** ~250 tokens for the router instead of a name (or schema) per
@@ -59,6 +59,14 @@ JSON results are minified and stripped of noise before they reach Claude:
 empty strings/arrays/objects, and arrays beyond `max_array_items` (default 50).
 Turn it off with `shape_json = false`; add keys with `drop_keys = ["trace"]`.
 
+## Code mode
+
+`run_script` runs a JavaScript function body in an embedded QuickJS sandbox (no
+filesystem, network, or imports; 60s, 50 tool calls, 64 MB). `call("server.tool", args)`
+returns the parsed result and throws on error; only the `return` value and
+`console.log` output reach Claude. Calls go through the deny list. Turn it off
+with `code_mode = false`.
+
 ## Benchmarks
 
 Headless Claude Code (`claude -p`, Sonnet), total input tokens per task, mean of 2 runs:
@@ -69,6 +77,7 @@ Headless Claude Code (`claude -p`, Sonnet), total input tokens per task, mean of
 | 480 tools, one MCP call | 104k | 88k (−15%) |
 | GitHub list of 20 issues (55 KB JSON) | 176k, 5 turns | 95k, 3 turns (−46%) |
 | 37 tools, one MCP call | 89–121k | −15% to +12% (no clear win) |
+| GitHub list → 6 Jira creates | 241k, 11 turns, 29s | 177k (−27%); with `run_script`: 6 turns, 14s |
 
 The GitHub win comes from shaping: the raw result passes Claude Code's
 50,000-character limit and is saved to a file Claude must read back.

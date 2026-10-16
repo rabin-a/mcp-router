@@ -20,6 +20,9 @@ pub struct Config {
     /// Extra JSON keys to drop from results, on top of the built-in noise keys.
     #[serde(default)]
     pub drop_keys: Vec<String>,
+    /// Offer `run_script` (sandboxed JavaScript that chains tool calls).
+    #[serde(default = "default_true")]
+    pub code_mode: bool,
     #[serde(default)]
     pub servers: BTreeMap<String, ServerConfig>,
 }

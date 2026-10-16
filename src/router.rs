@@ -16,6 +16,7 @@ use serde_json::{Value, json};
 use crate::{
     config::Config,
     pool::Pool,
+    sandbox::{self, Limits, ToolCall},
     search::{Doc, Index},
     shape::shape_text,
 };
@@ -133,6 +134,60 @@ impl Router {
             Err(e) => error(format!("{qualified} failed: {e:#}")),
         }
     }
+
+    async fn run_script(&self, args: &JsonObject) -> CallToolResult {
+        let Some(code) = args.get("code").and_then(Value::as_str) else {
+            return error("`code` is required".into());
+        };
+        let code = code.to_string();
+        let pool = self.pool.clone();
+        let handle = tokio::runtime::Handle::current();
+        // QuickJS is synchronous; tool calls inside the script block this thread on the runtime.
+        let outcome = tokio::task::spawn_blocking(move || {
+            let call: ToolCall = Box::new(move |qualified, args| {
+                let (server, tool) = qualified
+                    .split_once('.')
+                    .ok_or_else(|| format!("`{qualified}` must be `server.tool`"))?;
+                if pool.config.is_denied(qualified) {
+                    return Err(format!("`{qualified}` is blocked by the router's deny list"));
+                }
+                let Value::Object(args) = args else {
+                    return Err("arguments must be an object".into());
+                };
+                let result = handle.block_on(pool.call(server, tool, args)).map_err(|e| format!("{e:#}"))?;
+                tool_value(result)
+            });
+            sandbox::run(&code, call, &Limits::default())
+        })
+        .await;
+        match outcome {
+            Ok(Ok(value)) => trim_result(text(value.to_string()), &self.pool.config),
+            Ok(Err(e)) => error(e),
+            Err(e) => error(format!("script crashed: {e}")),
+        }
+    }
+}
+
+/// A downstream result as the script sees it: parsed JSON when the text is JSON.
+fn tool_value(result: CallToolResult) -> Result<Value, String> {
+    let text: Vec<&str> = result
+        .content
+        .iter()
+        .filter_map(|c| match c {
+            ContentBlock::Text(t) => Some(t.text.as_str()),
+            _ => None,
+        })
+        .collect();
+    let text = text.join("\n");
+    if result.is_error == Some(true) {
+        return Err(text);
+    }
+    if text.is_empty()
+        && let Some(structured) = result.structured_content
+    {
+        return Ok(structured);
+    }
+    Ok(serde_json::from_str(&text).unwrap_or(Value::String(text)))
 }
 
 impl ServerHandler for Router {
@@ -147,8 +202,13 @@ impl ServerHandler for Router {
             })
             .collect();
         ServerConfig::new(ServerCapabilities::builder().enable_tools().build()).with_instructions(format!(
-            "Routes to these MCP servers: {}. Call find_tools with what you want to do, then call_tool with the returned `server.tool` name.",
-            servers.join(", ")
+            "Routes to these MCP servers: {}. Call find_tools with what you want to do, then call_tool with the returned `server.tool` name.{}",
+            servers.join(", "),
+            if self.pool.config.code_mode {
+                " For several dependent calls, or a big result you only need part of, use run_script."
+            } else {
+                ""
+            }
         ))
     }
 
@@ -157,7 +217,7 @@ impl ServerHandler for Router {
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
     ) -> Result<ListToolsResult, McpError> {
-        Ok(ListToolsResult::with_all_items(router_tools()))
+        Ok(ListToolsResult::with_all_items(router_tools(self.pool.config.code_mode)))
     }
 
     async fn call_tool(
@@ -169,19 +229,20 @@ impl ServerHandler for Router {
         let result = match request.name.as_ref() {
             "find_tools" => self.find_tools(&args).await,
             "call_tool" => self.call_tool_downstream(&args).await,
+            "run_script" if self.pool.config.code_mode => self.run_script(&args).await,
             other => error(format!("unknown tool `{other}`")),
         };
         Ok(result.into())
     }
 }
 
-fn router_tools() -> Vec<Tool> {
+fn router_tools(code_mode: bool) -> Vec<Tool> {
     let schema = |v: Value| match v {
         Value::Object(map) => map,
         _ => unreachable!(),
     };
     // Claude Code defers MCP tools behind its own ToolSearch; deferring the router's
-    // two tools would cost an extra turn before every routed call.
+    // own tools would cost an extra turn before every routed call.
     let always_load = |mut tool: Tool| {
         tool.meta = serde_json::from_value(json!({"anthropic/alwaysLoad": true})).ok();
         tool
@@ -211,8 +272,23 @@ fn router_tools() -> Vec<Tool> {
                 "required": ["tool"]
             })),
         ),
+        Tool::new(
+            "run_script",
+            "Run JavaScript that calls tools, for multi-step work or large results you only need part of. \
+             `call(\"server.tool\", args)` returns the tool's result (parsed JSON when possible) and throws on error. \
+             `return` the value you want; only it (plus console.log output) comes back. \
+             No filesystem, network or imports; 60s and 50 calls max. Get names and schemas from find_tools first.",
+            schema(json!({
+                "type": "object",
+                "properties": {
+                    "code": {"type": "string", "description": "Function body, e.g. const r = call(\"github.list_issues\", {repo: \"o/r\"}); return r.length;"}
+                },
+                "required": ["code"]
+            })),
+        ),
     ]
     .into_iter()
+    .filter(|t| code_mode || t.name != "run_script")
     .map(always_load)
     .collect()
 }
