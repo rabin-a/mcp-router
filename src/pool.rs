@@ -4,16 +4,20 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use anyhow::{Context, Result, anyhow};
+use http::{HeaderName, HeaderValue};
 use rmcp::{
     RoleClient, ServiceExt,
     model::{CallToolRequestParams, CallToolResult, JsonObject, Tool},
     service::RunningService,
-    transport::TokioChildProcess,
+    transport::{
+        StreamableHttpClientTransport, TokioChildProcess,
+        streamable_http_client::StreamableHttpClientTransportConfig,
+    },
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, OnceCell};
 
-use crate::config::{Config, ServerConfig, cache_dir};
+use crate::config::{Config, ServerConfig, cache_dir, expand};
 
 const START_TIMEOUT: Duration = Duration::from_secs(60);
 
@@ -59,11 +63,35 @@ impl Pool {
             .clone();
         let server = self.server(name)?;
         cell.get_or_try_init(|| async {
-            let mut cmd = tokio::process::Command::new(&server.command);
-            cmd.args(&server.args).envs(&server.env);
-            let transport = TokioChildProcess::new(cmd)
-                .with_context(|| format!("spawning `{}` for server `{name}`", server.command))?;
-            let client = tokio::time::timeout(START_TIMEOUT, ().serve(transport))
+            let connecting = async {
+                match &server.url {
+                    Some(url) => {
+                        let mut headers = HashMap::new();
+                        for (key, value) in &server.headers {
+                            headers.insert(
+                                HeaderName::try_from(key.as_str())
+                                    .with_context(|| format!("bad header name `{key}`"))?,
+                                HeaderValue::try_from(expand(value))
+                                    .with_context(|| format!("bad value for header `{key}`"))?,
+                            );
+                        }
+                        let config = StreamableHttpClientTransportConfig::with_uri(expand(url))
+                            .custom_headers(headers);
+                        let transport = StreamableHttpClientTransport::from_config(config);
+                        Ok::<_, anyhow::Error>(().serve(transport).await?)
+                    }
+                    None => {
+                        let mut cmd = tokio::process::Command::new(expand(&server.command));
+                        cmd.args(server.args.iter().map(|a| expand(a)))
+                            .envs(server.env.iter().map(|(k, v)| (k, expand(v))));
+                        let transport = TokioChildProcess::new(cmd).with_context(|| {
+                            format!("spawning `{}` for server `{name}`", server.command)
+                        })?;
+                        Ok(().serve(transport).await?)
+                    }
+                }
+            };
+            let client = tokio::time::timeout(START_TIMEOUT, connecting)
                 .await
                 .map_err(|_| anyhow!("server `{name}` did not start within {START_TIMEOUT:?}"))?
                 .with_context(|| format!("initializing server `{name}`"))?;
@@ -98,7 +126,10 @@ impl Pool {
 
     pub async fn tools_for(&self, name: &str, refresh: bool) -> Result<Vec<Tool>> {
         let server = self.server(name)?;
-        let fingerprint = format!("{:?}|{:?}|{:?}", server.command, server.args, server.env);
+        let fingerprint = format!(
+            "{:?}|{:?}|{:?}|{:?}|{:?}",
+            server.command, server.args, server.env, server.url, server.headers
+        );
         let path = cache_dir().join(format!("{name}.json"));
         if !refresh
             && let Ok(text) = std::fs::read_to_string(&path)

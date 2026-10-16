@@ -27,16 +27,51 @@ pub struct Config {
     pub servers: BTreeMap<String, ServerConfig>,
 }
 
+/// One downstream server: a stdio `command`, or a streamable-HTTP `url`.
+/// Values may use `${VAR}` and `${VAR:-default}`, expanded when the server starts.
 #[derive(Debug, Deserialize)]
 pub struct ServerConfig {
+    #[serde(default)]
     pub command: String,
     #[serde(default)]
     pub args: Vec<String>,
     #[serde(default)]
     pub env: BTreeMap<String, String>,
+    #[serde(default)]
+    pub url: Option<String>,
+    #[serde(default)]
+    pub headers: BTreeMap<String, String>,
     /// One line shown to the model so it knows what the server is for.
     #[serde(default)]
     pub description: String,
+}
+
+/// Expand `${VAR}` and `${VAR:-default}` like Claude Code does in `.mcp.json`.
+/// An unset variable with no default is left as written.
+pub fn expand(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(start) = rest.find("${") {
+        out.push_str(&rest[..start]);
+        let after = &rest[start + 2..];
+        let Some(end) = after.find('}') else {
+            out.push_str(&rest[start..]);
+            return out;
+        };
+        let inner = &after[..end];
+        let (name, default) = match inner.split_once(":-") {
+            Some((name, default)) => (name, Some(default)),
+            None => (inner, None),
+        };
+        match (std::env::var(name).ok().filter(|v| !v.is_empty()), default) {
+            (Some(value), _) => out.push_str(&value),
+            (None, Some(default)) => out.push_str(default),
+            (None, None) => out.push_str(&rest[start..start + 3 + end]),
+        }
+        rest = &after[end + 1..];
+    }
+    out.push_str(rest);
+    out
 }
 
 fn default_max_output() -> usize {
@@ -117,7 +152,23 @@ fn glob_match(pattern: &str, text: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::glob_match;
+    use super::{expand, glob_match};
+
+    #[test]
+    fn expands_env_vars() {
+        // SAFETY: tests in this module don't read MCP_ROUTER_TEST_* concurrently.
+        unsafe { std::env::set_var("MCP_ROUTER_TEST_TOKEN", "abc") };
+        assert_eq!(expand("Bearer ${MCP_ROUTER_TEST_TOKEN}"), "Bearer abc");
+        assert_eq!(
+            expand("${MCP_ROUTER_TEST_UNSET:-https://x}/mcp"),
+            "https://x/mcp"
+        );
+        assert_eq!(
+            expand("${MCP_ROUTER_TEST_UNSET}"),
+            "${MCP_ROUTER_TEST_UNSET}"
+        );
+        assert_eq!(expand("no vars, ${unclosed"), "no vars, ${unclosed");
+    }
 
     #[test]
     fn globs() {

@@ -153,12 +153,12 @@ footer { border-top: 2px solid var(--ink); padding: 2rem 0 3rem; color: var(--mu
         <button type="button" id="copy" aria-live="polite">Copy</button>
       </div>
       <div class="then">
-        <p>List your MCP servers in <code>~/.config/mcp-router/servers.toml</code>, then add the router to Claude Code:</p>
-<pre><code>[servers.github]
-command = "npx"
-args = ["-y", "@modelcontextprotocol/server-github"]
-description = "GitHub repos, issues, PRs"</code></pre>
-<pre><code>claude mcp add router -- mcp-router</code></pre>
+        <p>Move the MCP servers you already use in Claude Code into the router, then add the router itself:</p>
+<pre><code>mcp-router import
+claude mcp add router -s user -- mcp-router</code></pre>
+        <p>Adding new servers works like <code>claude mcp add</code>:</p>
+<pre><code>mcp-router add -e GITHUB_TOKEN=... github -- npx -y @modelcontextprotocol/server-github
+mcp-router add -t http linear https://mcp.linear.app/mcp</code></pre>
       </div>
     </section>
 

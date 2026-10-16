@@ -1,4 +1,5 @@
 mod config;
+mod manage;
 mod pool;
 mod router;
 mod sandbox;
@@ -11,13 +12,21 @@ use rmcp::{ServiceExt, transport::stdio};
 use crate::{config::Config, pool::Pool, router::Router};
 
 const USAGE: &str = "\
-mcp-router — one MCP server in front of many, so Claude loads 2 tools instead of hundreds.
+mcp-router — one MCP server in front of many, so Claude loads 3 tools instead of hundreds.
 
 usage:
   mcp-router                 serve over stdio (what Claude Code runs)
   mcp-router refresh [name]  re-fetch tool lists into the cache
   mcp-router search <query>  try a search from the shell
   mcp-router stats           tools per server and estimated schema tokens saved
+
+manage servers (same syntax as `claude mcp`):
+  mcp-router import [--dry-run] [--force]   copy Claude Code's MCP servers for this directory
+  mcp-router add [-e KEY=value] <name> -- <command> [args...]
+  mcp-router add -t http [-H \"Name: value\"] <name> <url>
+  mcp-router add-json <name> '<json>'
+  mcp-router remove <name>
+  mcp-router list
 
 config: $MCP_ROUTER_CONFIG or ~/.config/mcp-router/servers.toml";
 
@@ -32,6 +41,34 @@ async fn main() -> Result<()> {
         .init();
 
     let args: Vec<String> = std::env::args().skip(1).collect();
+    // Commands that edit servers.toml run before loading it, so they work on a fresh install.
+    match args.first().map(String::as_str) {
+        Some("add") => {
+            let (name, entry, force) = manage::parse_add(&args[1..])?;
+            return manage::add(&name, &entry, force);
+        }
+        Some("add-json") => {
+            let force = args.iter().any(|a| a == "--force" || a == "-f");
+            let rest: Vec<&String> = args[1..].iter().filter(|a| !a.starts_with('-')).collect();
+            let [name, json] = rest[..] else {
+                anyhow::bail!("usage: mcp-router add-json <name> '<json>'");
+            };
+            return manage::add_json(name, json, force);
+        }
+        Some("remove") => {
+            let name = args
+                .get(1)
+                .ok_or_else(|| anyhow::anyhow!("usage: mcp-router remove <name>"))?;
+            return manage::remove(name);
+        }
+        Some("list") => return manage::list(),
+        Some("import") => return manage::import(&args[1..]),
+        Some("help" | "-h" | "--help") => {
+            println!("{USAGE}");
+            return Ok(());
+        }
+        _ => {}
+    }
     let pool = Pool::new(Config::load()?);
     match args.first().map(String::as_str) {
         None | Some("serve") => {

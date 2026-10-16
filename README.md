@@ -38,9 +38,37 @@ From source:
 cargo install --git https://github.com/rabin-a/mcp-router
 ```
 
+## Move your servers from Claude Code
+
+`import` copies the MCP servers Claude Code already uses in the current directory
+(user, project and local scopes) into the router, then prints the
+`claude mcp remove` commands that stop Claude loading them directly:
+
+```sh
+mcp-router import --dry-run   # preview
+mcp-router import
+claude mcp add router -s user -- mcp-router
+```
+
+## Add servers
+
+Same syntax as `claude mcp add`:
+
+```sh
+mcp-router add -e GITHUB_TOKEN=... github -- npx -y @modelcontextprotocol/server-github
+mcp-router add -t http -H "Authorization: Bearer ${API_TOKEN}" linear https://mcp.linear.app/mcp
+mcp-router add-json weather '{"type":"http","url":"https://api.weather.example/mcp"}'
+mcp-router list
+mcp-router remove weather
+```
+
+Stdio and streamable HTTP servers are supported; SSE isn't. claude.ai connectors
+can't be routed, because they're authenticated by claude.ai, not locally.
+
 ## Configure
 
-`~/.config/mcp-router/servers.toml` (or set `MCP_ROUTER_CONFIG`):
+Servers live in `~/.config/mcp-router/servers.toml` (or `$MCP_ROUTER_CONFIG`). You
+can edit it by hand too. Values may use `${VAR}` and `${VAR:-default}`, as in `.mcp.json`:
 
 ```toml
 max_output_chars = 20000
@@ -49,25 +77,20 @@ deny = ["*.delete_*", "gmail.send*"]
 [servers.github]
 command = "npx"
 args = ["-y", "@modelcontextprotocol/server-github"]
-env = { GITHUB_PERSONAL_ACCESS_TOKEN = "..." }
+env = { GITHUB_PERSONAL_ACCESS_TOKEN = "${GITHUB_TOKEN}" }
 description = "GitHub repos, issues, PRs"
-```
 
-Stdio servers only for now. claude.ai connectors can't be routed — they're
-authenticated by claude.ai, not locally.
-
-## Use with Claude Code
-
-Move local stdio servers from Claude's MCP config into `servers.toml`, then:
-
-```sh
-claude mcp add router -- mcp-router
+[servers.linear]
+url = "https://mcp.linear.app/mcp"
+headers = { Authorization = "Bearer ${LINEAR_TOKEN}" }
 ```
 
 ## Commands
 
 ```sh
 mcp-router                 # serve over stdio (what Claude Code runs)
+mcp-router import          # copy servers from Claude Code
+mcp-router add | add-json | remove | list
 mcp-router refresh [name]  # re-fetch tool lists into the cache
 mcp-router search <query>  # try a search from the shell
 mcp-router stats           # tools per server, schema tokens kept out of context

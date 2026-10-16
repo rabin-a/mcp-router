@@ -52,4 +52,4 @@ case ":$PATH:" in
   *":$INSTALL_DIR:"*) ;;
   *) echo "Note: $INSTALL_DIR is not on your PATH. Add it, e.g.: export PATH=\"$INSTALL_DIR:\$PATH\"" ;;
 esac
-echo "Next: create ~/.config/mcp-router/servers.toml, then run: claude mcp add router -- mcp-router"
+echo "Next: mcp-router import   (copies your Claude Code MCP servers), then: claude mcp add router -s user -- mcp-router"
