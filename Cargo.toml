@@ -2,6 +2,9 @@
 name = "mcp-router"
 version = "0.1.0"
 edition = "2024"
+description = "One MCP server in front of many: tool search, lazy start, JSON shaping and code mode"
+license = "MIT"
+repository = "https://github.com/rabin-a/mcp-router"
 
 [dependencies]
 anyhow = "1.0.104"
@@ -9,10 +12,13 @@ dirs = "7.0.0"
 futures = "0.3.34"
 rmcp = { version = "3.5.1", features = ["server", "client", "transport-io", "transport-child-process", "macros"] }
 rquickjs = "0.14"
-schemars = "1.2.3"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 tokio = { version = "1.53.3", features = ["full"] }
 toml = "1.1.8"
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+
+[profile.release]
+strip = true
+lto = "thin"

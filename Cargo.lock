@@ -414,7 +414,6 @@ dependencies = [
  "futures",
  "rmcp",
  "rquickjs",
- "schemars",
  "serde",
  "serde_json",
  "tokio",

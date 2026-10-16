@@ -1,8 +1,14 @@
 # mcp-router
 
+[![ci](https://github.com/rabin-a/mcp-router/actions/workflows/ci.yml/badge.svg)](https://github.com/rabin-a/mcp-router/actions/workflows/ci.yml)
+
+> **Benchmark:** six open-source MCP proxies and mcp-router, measured head-to-head
+> in Claude Code. Most proxies *increase* tokens once a tool is called; mcp-router
+> cut them 13–44% and finished every task. [Read BENCHMARK.md →](BENCHMARK.md)
+
 One MCP server in front of many. Claude Code loads three tools — `find_tools`,
 `call_tool` and `run_script` — instead of every tool from every server. Downstream servers start
-only when first used; their tool lists are cached in `~/Library/Caches/mcp-router`.
+only when first used; their tool lists are cached in `~/Library/Caches/mcp-router` (macOS) or `~/.cache/mcp-router` (Linux).
 
 - **Fewer tokens:** ~250 tokens for the router instead of a name (or schema) per
   downstream tool. Schemas are sent only for search hits, with noise keys
@@ -13,8 +19,21 @@ only when first used; their tool lists are cached in `~/Library/Caches/mcp-route
 
 ## Install
 
+macOS and Linux (x86_64 and arm64):
+
 ```sh
-cargo install --path .
+curl -fsSL https://raw.githubusercontent.com/rabin-a/mcp-router/master/install.sh | sh
+```
+
+This installs to `~/.local/bin` after verifying the SHA-256 checksum. Set
+`MCP_ROUTER_INSTALL_DIR` to change the location, or `MCP_ROUTER_VERSION=v0.1.0`
+to pin a release. Binaries are also on the
+[Releases](https://github.com/rabin-a/mcp-router/releases) page.
+
+From source:
+
+```sh
+cargo install --git https://github.com/rabin-a/mcp-router
 ```
 
 ## Configure

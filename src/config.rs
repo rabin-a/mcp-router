@@ -51,11 +51,16 @@ fn default_max_items() -> usize {
     50
 }
 
+/// `$MCP_ROUTER_CONFIG`, else `$XDG_CONFIG_HOME/mcp-router/servers.toml`, else
+/// `~/.config/mcp-router/servers.toml` — on macOS too, where `dirs::config_dir()`
+/// would point into `~/Library/Application Support`.
 pub fn config_path() -> PathBuf {
     std::env::var_os("MCP_ROUTER_CONFIG")
         .map(PathBuf::from)
         .unwrap_or_else(|| {
-            dirs::config_dir()
+            std::env::var_os("XDG_CONFIG_HOME")
+                .map(PathBuf::from)
+                .or_else(|| dirs::home_dir().map(|h| h.join(".config")))
                 .unwrap_or_else(|| PathBuf::from("."))
                 .join("mcp-router/servers.toml")
         })
@@ -76,7 +81,9 @@ impl Config {
     }
 
     pub fn is_denied(&self, qualified: &str) -> bool {
-        self.deny.iter().any(|pattern| glob_match(pattern, qualified))
+        self.deny
+            .iter()
+            .any(|pattern| glob_match(pattern, qualified))
     }
 }
 

@@ -70,11 +70,21 @@ async fn main() -> Result<()> {
         Some("stats") => {
             let mut total_chars = 0;
             for (name, tools) in pool.catalog().await {
-                let chars: usize = tools.iter().map(|t| serde_json::to_string(t).map_or(0, |s| s.len())).sum();
+                let chars: usize = tools
+                    .iter()
+                    .map(|t| serde_json::to_string(t).map_or(0, |s| s.len()))
+                    .sum();
                 total_chars += chars;
-                println!("{name}: {} tools, ~{} schema tokens", tools.len(), chars / 4);
+                println!(
+                    "{name}: {} tools, ~{} schema tokens",
+                    tools.len(),
+                    chars / 4
+                );
             }
-            println!("total: ~{} tokens of schemas kept out of context (router itself: ~250)", total_chars / 4);
+            println!(
+                "total: ~{} tokens of schemas kept out of context (router itself: ~250)",
+                total_chars / 4
+            );
         }
         Some(_) => println!("{USAGE}"),
     }

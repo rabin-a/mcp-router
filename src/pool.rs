@@ -34,7 +34,11 @@ pub struct Pool {
 
 impl Pool {
     pub fn new(config: Config) -> Self {
-        Self { config, clients: Mutex::default(), catalog: OnceCell::new() }
+        Self {
+            config,
+            clients: Mutex::default(),
+            catalog: OnceCell::new(),
+        }
     }
 
     fn server(&self, name: &str) -> Result<&ServerConfig> {
@@ -46,7 +50,13 @@ impl Pool {
 
     /// Connected client for `name`, spawning the server on first use.
     async fn client(&self, name: &str) -> Result<Arc<Client>> {
-        let cell = self.clients.lock().await.entry(name.to_string()).or_default().clone();
+        let cell = self
+            .clients
+            .lock()
+            .await
+            .entry(name.to_string())
+            .or_default()
+            .clone();
         let server = self.server(name)?;
         cell.get_or_try_init(|| async {
             let mut cmd = tokio::process::Command::new(&server.command);
@@ -77,7 +87,11 @@ impl Pool {
                         }
                     }
                 });
-                futures::future::join_all(loads).await.into_iter().flatten().collect()
+                futures::future::join_all(loads)
+                    .await
+                    .into_iter()
+                    .flatten()
+                    .collect()
             })
             .await
     }
@@ -95,11 +109,22 @@ impl Pool {
         }
         let tools = self.client(name).await?.list_all_tools().await?;
         std::fs::create_dir_all(cache_dir())?;
-        std::fs::write(&path, serde_json::to_string(&CacheFile { fingerprint, tools: tools.clone() })?)?;
+        std::fs::write(
+            &path,
+            serde_json::to_string(&CacheFile {
+                fingerprint,
+                tools: tools.clone(),
+            })?,
+        )?;
         Ok(tools)
     }
 
-    pub async fn call(&self, server: &str, tool: &str, arguments: JsonObject) -> Result<CallToolResult> {
+    pub async fn call(
+        &self,
+        server: &str,
+        tool: &str,
+        arguments: JsonObject,
+    ) -> Result<CallToolResult> {
         let params = CallToolRequestParams::new(tool.to_string()).with_arguments(arguments);
         Ok(self.client(server).await?.call_tool(params).await?)
     }

@@ -6,8 +6,10 @@ use serde_json::Value;
 /// Keys dropped everywhere. `*_url` covers GitHub-style hypermedia links;
 /// `html_url` and `url` survive because they're what a person would click.
 fn is_noise_key(key: &str, extra: &[String]) -> bool {
-    matches!(key, "node_id" | "gravatar_id" | "_links" | "etag" | "avatar_url")
-        || (key.ends_with("_url") && key != "html_url")
+    matches!(
+        key,
+        "node_id" | "gravatar_id" | "_links" | "etag" | "avatar_url"
+    ) || (key.ends_with("_url") && key != "html_url")
         || extra.iter().any(|k| k == key)
 }
 
@@ -32,8 +34,11 @@ fn shape(value: Value, max_items: usize, extra: &[String]) -> Value {
         ),
         Value::Array(items) => {
             let total = items.len();
-            let mut kept: Vec<Value> =
-                items.into_iter().take(max_items).map(|v| shape(v, max_items, extra)).collect();
+            let mut kept: Vec<Value> = items
+                .into_iter()
+                .take(max_items)
+                .map(|v| shape(v, max_items, extra))
+                .collect();
             if total > max_items {
                 kept.push(Value::String(format!(
                     "[mcp-router: {} more items omitted; narrow the query or paginate]",
@@ -90,7 +95,10 @@ mod tests {
     #[test]
     fn caps_long_arrays_and_ignores_plain_text() {
         let out = shape_text(&json!((0..100).collect::<Vec<_>>()).to_string(), 3, &[]).unwrap();
-        assert_eq!(out, r#"[0,1,2,"[mcp-router: 97 more items omitted; narrow the query or paginate]"]"#);
+        assert_eq!(
+            out,
+            r#"[0,1,2,"[mcp-router: 97 more items omitted; narrow the query or paginate]"]"#
+        );
         assert_eq!(shape_text("The sum is 42", 3, &[]), None);
         assert_eq!(shape_text("{not json", 3, &[]), None);
     }

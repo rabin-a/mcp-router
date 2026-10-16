@@ -21,7 +21,11 @@ pub struct Limits {
 
 impl Default for Limits {
     fn default() -> Self {
-        Self { timeout: Duration::from_secs(60), max_calls: 50, memory_bytes: 64 << 20 }
+        Self {
+            timeout: Duration::from_secs(60),
+            max_calls: 50,
+            memory_bytes: 64 << 20,
+        }
     }
 }
 
@@ -98,8 +102,12 @@ mod tests {
 
     fn fake_tools() -> ToolCall {
         Box::new(|tool, args| match tool {
-            "math.add" => Ok(json!(args["a"].as_i64().unwrap() + args["b"].as_i64().unwrap())),
-            "repo.list" => Ok(json!([{"n": 1, "bug": true}, {"n": 2, "bug": false}, {"n": 3, "bug": true}])),
+            "math.add" => Ok(json!(
+                args["a"].as_i64().unwrap() + args["b"].as_i64().unwrap()
+            )),
+            "repo.list" => {
+                Ok(json!([{"n": 1, "bug": true}, {"n": 2, "bug": false}, {"n": 3, "bug": true}]))
+            }
             _ => Err(format!("unknown tool {tool}")),
         })
     }
@@ -127,18 +135,40 @@ mod tests {
 
     #[test]
     fn enforces_limits_and_has_no_host_access() {
-        let limits = Limits { timeout: Duration::from_millis(200), ..Limits::default() };
+        let limits = Limits {
+            timeout: Duration::from_millis(200),
+            ..Limits::default()
+        };
         let err = run("while (true) {}", fake_tools(), &limits).unwrap_err();
         assert!(err.contains("timed out"), "{err}");
 
-        let limits = Limits { max_calls: 2, ..Limits::default() };
-        let err = run(r#"for (;;) call("math.add", {a: 1, b: 1});"#, fake_tools(), &limits).unwrap_err();
+        let limits = Limits {
+            max_calls: 2,
+            ..Limits::default()
+        };
+        let err = run(
+            r#"for (;;) call("math.add", {a: 1, b: 1});"#,
+            fake_tools(),
+            &limits,
+        )
+        .unwrap_err();
         assert!(err.contains("call limit"), "{err}");
 
-        let out = run("return [typeof require, typeof fetch, typeof std, typeof os];", fake_tools(), &Limits::default())
-            .unwrap();
-        assert_eq!(out["result"], json!(["undefined", "undefined", "undefined", "undefined"]));
+        let out = run(
+            "return [typeof require, typeof fetch, typeof std, typeof os];",
+            fake_tools(),
+            &Limits::default(),
+        )
+        .unwrap();
+        assert_eq!(
+            out["result"],
+            json!(["undefined", "undefined", "undefined", "undefined"])
+        );
 
-        assert!(run("this is not js", fake_tools(), &Limits::default()).unwrap_err().contains("script error"));
+        assert!(
+            run("this is not js", fake_tools(), &Limits::default())
+                .unwrap_err()
+                .contains("script error")
+        );
     }
 }

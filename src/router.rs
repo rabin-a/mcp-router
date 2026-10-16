@@ -32,7 +32,10 @@ pub struct Router {
 
 impl Router {
     pub fn new(pool: Pool) -> Self {
-        Self { pool: Arc::new(pool), index: Arc::default() }
+        Self {
+            pool: Arc::new(pool),
+            index: Arc::default(),
+        }
     }
 
     async fn index(&self) -> &Index {
@@ -57,7 +60,10 @@ impl Router {
     }
 
     async fn find_tools(&self, args: &JsonObject) -> CallToolResult {
-        let query = args.get("query").and_then(Value::as_str).unwrap_or_default();
+        let query = args
+            .get("query")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
         let server = args.get("server").and_then(Value::as_str);
         let limit = args
             .get("limit")
@@ -83,7 +89,12 @@ impl Router {
             .search(query, limit * 4)
             .into_iter()
             .filter(|d| server.is_none_or(|s| d.server == s))
-            .filter(|d| !self.pool.config.is_denied(&format!("{}.{}", d.server, d.tool)))
+            .filter(|d| {
+                !self
+                    .pool
+                    .config
+                    .is_denied(&format!("{}.{}", d.server, d.tool))
+            })
             .take(limit)
             .collect();
         if hits.is_empty() {
@@ -119,10 +130,14 @@ impl Router {
             return error("`tool` is required, as `server.tool`".into());
         };
         let Some((server, tool)) = qualified.split_once('.') else {
-            return error(format!("`{qualified}` must be `server.tool`; use find_tools to get the name"));
+            return error(format!(
+                "`{qualified}` must be `server.tool`; use find_tools to get the name"
+            ));
         };
         if self.pool.config.is_denied(qualified) {
-            return error(format!("`{qualified}` is blocked by the router's deny list"));
+            return error(format!(
+                "`{qualified}` is blocked by the router's deny list"
+            ));
         }
         let arguments = match args.get("arguments") {
             Some(Value::Object(map)) => map.clone(),
@@ -149,12 +164,16 @@ impl Router {
                     .split_once('.')
                     .ok_or_else(|| format!("`{qualified}` must be `server.tool`"))?;
                 if pool.config.is_denied(qualified) {
-                    return Err(format!("`{qualified}` is blocked by the router's deny list"));
+                    return Err(format!(
+                        "`{qualified}` is blocked by the router's deny list"
+                    ));
                 }
                 let Value::Object(args) = args else {
                     return Err("arguments must be an object".into());
                 };
-                let result = handle.block_on(pool.call(server, tool, args)).map_err(|e| format!("{e:#}"))?;
+                let result = handle
+                    .block_on(pool.call(server, tool, args))
+                    .map_err(|e| format!("{e:#}"))?;
                 tool_value(result)
             });
             sandbox::run(&code, call, &Limits::default())
@@ -198,7 +217,11 @@ impl ServerHandler for Router {
             .servers
             .iter()
             .map(|(name, s)| {
-                if s.description.is_empty() { name.clone() } else { format!("{name} ({})", s.description) }
+                if s.description.is_empty() {
+                    name.clone()
+                } else {
+                    format!("{name} ({})", s.description)
+                }
             })
             .collect();
         ServerConfig::new(ServerCapabilities::builder().enable_tools().build()).with_instructions(format!(
@@ -217,7 +240,9 @@ impl ServerHandler for Router {
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
     ) -> Result<ListToolsResult, McpError> {
-        Ok(ListToolsResult::with_all_items(router_tools(self.pool.config.code_mode)))
+        Ok(ListToolsResult::with_all_items(router_tools(
+            self.pool.config.code_mode,
+        )))
     }
 
     async fn call_tool(
@@ -302,7 +327,12 @@ fn error(s: String) -> CallToolResult {
 }
 
 fn short(description: Option<&str>) -> String {
-    let first_line = description.unwrap_or_default().lines().next().unwrap_or_default().trim();
+    let first_line = description
+        .unwrap_or_default()
+        .lines()
+        .next()
+        .unwrap_or_default()
+        .trim();
     clip(first_line, MAX_DESCRIPTION)
 }
 
@@ -323,10 +353,15 @@ fn compact_schema(value: Value) -> Value {
                         || k == "additionalProperties" && v == &Value::Bool(false))
                 })
                 .map(|(k, v)| match (k.as_str(), v) {
-                    ("description", Value::String(s)) => (k, Value::String(clip(&s, MAX_DESCRIPTION))),
+                    ("description", Value::String(s)) => {
+                        (k, Value::String(clip(&s, MAX_DESCRIPTION)))
+                    }
                     // Keys under `properties` are argument names, not schema keywords: keep them all.
                     ("properties", Value::Object(props)) => {
-                        let props = props.into_iter().map(|(name, s)| (name, compact_schema(s))).collect();
+                        let props = props
+                            .into_iter()
+                            .map(|(name, s)| (name, compact_schema(s)))
+                            .collect();
                         (k, Value::Object(props))
                     }
                     (_, v) => (k, compact_schema(v)),
@@ -354,7 +389,10 @@ fn trim_result(mut result: CallToolResult, config: &Config) -> CallToolResult {
             let len = t.text.chars().count();
             if len > budget {
                 let kept = clip(&t.text, budget);
-                t.text = format!("{kept}\n[mcp-router: truncated {} of {len} chars]", len - budget);
+                t.text = format!(
+                    "{kept}\n[mcp-router: truncated {} of {len} chars]",
+                    len - budget
+                );
                 budget = 0;
             } else {
                 budget -= len;
@@ -395,7 +433,9 @@ mod tests {
         let config: Config = toml::from_str("max_output_chars = 10").unwrap();
         let out = trim_result(result, &config);
         assert_eq!(out.result_type, Some(ResultType::COMPLETE));
-        let ContentBlock::Text(t) = &out.content[0] else { panic!() };
+        let ContentBlock::Text(t) = &out.content[0] else {
+            panic!()
+        };
         assert!(t.text.starts_with("aaaaaaaaaa…"));
         assert!(t.text.contains("truncated 90 of 100"));
     }

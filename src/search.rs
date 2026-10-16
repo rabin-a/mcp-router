@@ -86,7 +86,13 @@ impl Index {
         } else {
             lengths.iter().sum::<f32>() / lengths.len() as f32
         };
-        Self { docs, terms, lengths, doc_freq, avg_len }
+        Self {
+            docs,
+            terms,
+            lengths,
+            doc_freq,
+            avg_len,
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -115,7 +121,11 @@ impl Index {
             })
             .collect();
         scored.sort_by(|a, b| b.0.total_cmp(&a.0));
-        scored.into_iter().take(limit).map(|(_, i)| &self.docs[i]).collect()
+        scored
+            .into_iter()
+            .take(limit)
+            .map(|(_, i)| &self.docs[i])
+            .collect()
     }
 }
 
@@ -124,26 +134,47 @@ mod tests {
     use super::*;
 
     fn doc(server: &str, tool: &str, description: &str) -> Doc {
-        Doc { server: server.into(), tool: tool.into(), description: description.into() }
+        Doc {
+            server: server.into(),
+            tool: tool.into(),
+            description: description.into(),
+        }
     }
 
     #[test]
     fn tokenizes_snake_and_camel() {
-        assert_eq!(tokenize("createPullRequest"), vec!["create", "pull", "request"]);
+        assert_eq!(
+            tokenize("createPullRequest"),
+            vec!["create", "pull", "request"]
+        );
         assert_eq!(tokenize("list_issues"), vec!["list", "issue"]);
-        assert_eq!(tokenize("issue repositories access"), vec!["issue", "repository", "access"]);
+        assert_eq!(
+            tokenize("issue repositories access"),
+            vec!["issue", "repository", "access"]
+        );
     }
 
     #[test]
     fn ranks_name_matches_first() {
         let index = Index::new(vec![
-            doc("github", "create_issue", "Create a new issue in a repository"),
-            doc("github", "list_repos", "List repositories, including issue counts"),
+            doc(
+                "github",
+                "create_issue",
+                "Create a new issue in a repository",
+            ),
+            doc(
+                "github",
+                "list_repos",
+                "List repositories, including issue counts",
+            ),
             doc("slack", "send_message", "Send a message to a channel"),
         ]);
         let hits = index.search("open an issue", 2);
         assert_eq!(hits[0].tool, "create_issue");
-        assert_eq!(index.search("post slack message", 1)[0].tool, "send_message");
+        assert_eq!(
+            index.search("post slack message", 1)[0].tool,
+            "send_message"
+        );
         assert!(index.search("kubernetes", 5).is_empty());
     }
 }
