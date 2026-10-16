@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mcp-router</title>
+<meta name="description" content="One MCP server in front of many. Fewer tokens in Claude Code: tool search, lazy start, JSON shaping and code mode.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%2300798C' stroke-width='5'/%3E%3C/svg%3E">
+<style>
+:root {
+  --paper: #EEF2F0;
+  --panel: #E2E8E5;
+  --ink: #14213D;
+  --muted: #4A5568;
+  --line: #C5CFCA;
+  --less: #00798C;
+  --more: #B23A48;
+  --c1: #D1495B; --c2: #EDAE49; --c3: #00798C; --c4: #30638E; --c5: #6A4C93;
+  --code-bg: #14213D; --code-ink: #E8EEF2;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F1A2E; --panel: #17243B; --ink: #E6ECEA; --muted: #A3B1BF; --line: #2A3A55;
+    --less: #3FB8C9; --more: #E5737F; --code-bg: #08111F; --code-ink: #E6ECEA;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F1A2E; --panel: #17243B; --ink: #E6ECEA; --muted: #A3B1BF; --line: #2A3A55;
+  --less: #3FB8C9; --more: #E5737F; --code-bg: #08111F; --code-ink: #E6ECEA;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 400 1.125rem/1.65 "Source Serif 4", Georgia, serif;
+}
+a { color: inherit; text-decoration-color: var(--less); text-underline-offset: 3px; text-decoration-thickness: 2px; }
+a:hover { color: var(--less); }
+:focus-visible { outline: 3px solid var(--less); outline-offset: 3px; border-radius: 2px; }
+code, pre, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.86em; }
+h1, h2, h3 { font-family: "Bricolage Grotesque", system-ui, sans-serif; line-height: 1.05; margin: 0; }
+
+.wrap { max-width: 68rem; margin: 0 auto; padding: 0 1rem; }
+@media (min-width: 40rem) { .wrap { padding: 0 2rem; } }
+
+/* Top bar */
+.top { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; align-items: center; padding: 1.25rem 0; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; }
+.top nav { display: flex; gap: 1rem; font-weight: 500; font-size: 1rem; }
+
+/* Hero */
+.hero > * { min-width: 0; }
+.hero { display: grid; gap: 2rem; padding: 2.5rem 0 4rem; align-items: center; }
+@media (min-width: 56rem) { .hero { grid-template-columns: 1.05fr 1fr; padding: 4.5rem 0 6rem; } }
+.hero h1 { font-size: clamp(2.6rem, 7vw, 4.75rem); font-weight: 800; letter-spacing: -0.02em; font-variation-settings: "opsz" 96; }
+.hero h1 span { display: block; color: var(--muted); font-weight: 500; }
+.hero p { max-width: 34rem; font-size: 1.25rem; margin: 1.5rem 0 0; color: var(--muted); }
+.patch { width: 100%; height: auto; display: block; }
+.patch .cable { fill: none; stroke-width: 1.2; opacity: 0.55; }
+.patch .jack { fill: var(--paper); stroke: var(--ink); stroke-width: 3; }
+.patch text { font: 500 15px "JetBrains Mono", monospace; fill: var(--ink); }
+.patch .count { font: 800 22px "Bricolage Grotesque", sans-serif; fill: var(--muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .patch .cable { stroke-dasharray: 600; stroke-dashoffset: 600; animation: plug 1.6s cubic-bezier(.2,.7,.2,1) forwards; animation-delay: var(--d); }
+  @keyframes plug { to { stroke-dashoffset: 0; } }
+}
+
+/* Sections */
+section { padding: 3.5rem 0; border-top: 2px solid var(--ink); }
+section h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 700; margin-bottom: 1.25rem; max-width: 40rem; }
+.lede { max-width: 40rem; color: var(--muted); margin: 0 0 2rem; }
+
+/* Install */
+.cmd { display: flex; align-items: stretch; max-width: 52rem; background: var(--code-bg); color: var(--code-ink); border-radius: 10px; overflow: hidden; }
+.cmd pre { margin: 0; padding: 1.1rem 1.25rem; overflow-x: auto; flex: 1; min-width: 0; font-size: 0.95rem; }
+.cmd button {
+  border: 0; border-left: 1px solid rgba(255,255,255,.15); background: transparent; color: var(--code-ink);
+  font: 500 0.95rem "Bricolage Grotesque", sans-serif; padding: 0 1.25rem; cursor: pointer; min-width: 6.5rem;
+}
+.cmd button:hover { background: rgba(255,255,255,.08); }
+.then { margin: 1.5rem 0 0; max-width: 40rem; }
+.then pre { background: var(--panel); padding: 1rem 1.25rem; border-radius: 10px; overflow-x: auto; margin: .75rem 0 0; }
+
+/* Tools */
+.tools { display: grid; gap: 2rem; margin: 0; }
+@media (min-width: 56rem) { .tools { grid-template-columns: repeat(3, 1fr); } }
+.tools dt { font: 500 1.05rem "JetBrains Mono", monospace; padding-bottom: .5rem; border-bottom: 4px solid var(--c); margin-bottom: .75rem; }
+.tools dd { margin: 0; color: var(--muted); }
+
+/* Benchmark */
+.bench { max-width: 52rem; margin: 0; padding: 0; list-style: none; }
+.bench li { display: grid; grid-template-columns: 11rem 1fr; gap: .25rem 1rem; align-items: center; padding: .6rem 0; border-bottom: 1px solid var(--line); }
+@media (max-width: 40rem) { .bench li { grid-template-columns: 1fr; } }
+.bench .name { font-family: "Bricolage Grotesque", sans-serif; font-weight: 600; }
+.bench .name small { display: block; font-weight: 500; color: var(--muted); font-size: .8rem; }
+.track { position: relative; height: 1.9rem; }
+.track::before { content: ""; position: absolute; left: 50%; top: -0.35rem; bottom: -0.35rem; border-left: 2px solid var(--ink); }
+.bar { position: absolute; top: .35rem; height: 1.2rem; border-radius: 3px; }
+.bar.less { right: 50%; background: var(--less); }
+.bar.more { left: 50%; background: var(--more); }
+.val { position: absolute; top: .2rem; font: 500 .85rem "JetBrains Mono", monospace; white-space: nowrap; }
+.val.l { right: calc(50% + var(--w) + .5rem); }
+.val.r { left: calc(50% + var(--w) + .5rem); }
+.fail { position: absolute; left: calc(50% + .75rem); top: .25rem; font-size: .95rem; color: var(--more); font-style: italic; }
+.ours .name { color: var(--less); }
+.axis { display: grid; grid-template-columns: 11rem 1fr; gap: 1rem; color: var(--muted); font-size: .9rem; margin-top: .5rem; max-width: 52rem; }
+.axis div { display: flex; justify-content: space-between; }
+@media (max-width: 40rem) { .axis { grid-template-columns: 1fr; } .axis > span { display: none; } }
+.findings { max-width: 42rem; padding-left: 1.25rem; margin: 2.5rem 0 0; }
+.findings li { margin-bottom: .9rem; }
+
+footer .links { display: flex; gap: 1.25rem; }
+footer { border-top: 2px solid var(--ink); padding: 2rem 0 3rem; color: var(--muted); font-size: 1rem; display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span>mcp-router</span>
+    <nav aria-label="Primary">
+      <a href="#install">Install</a>
+      <a href="#benchmark">Benchmark</a>
+      <a href="https://github.com/rabin-a/mcp-router">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <h1>441 tools in.<span>Three tools out.</span></h1>
+        <p>mcp-router sits between Claude Code and your MCP servers. Claude searches for the tool it needs instead of carrying every tool in every request, and results arrive trimmed to what matters.</p>
+      </div>
+      <svg class="patch" viewBox="0 0 520 360" role="img" aria-labelledby="patch-title">
+        <title id="patch-title">Many tool connections on the left converge into three sockets: find_tools, call_tool and run_script.</title>
+        <g id="cables"></g>
+        <text class="count" x="0" y="350">441 tools</text>
+        <g>
+          <circle class="jack" cx="400" cy="90" r="13"/><text x="424" y="95">find_tools</text>
+          <circle class="jack" cx="400" cy="180" r="13"/><text x="424" y="185">call_tool</text>
+          <circle class="jack" cx="400" cy="270" r="13"/><text x="424" y="275">run_script</text>
+        </g>
+      </svg>
+    </div>
+
+    <section id="install" aria-labelledby="install-h">
+      <h2 id="install-h">Install in one line</h2>
+      <p class="lede">macOS and Linux, x86_64 and arm64. Checks the SHA-256 checksum, then installs to <code>~/.local/bin</code>.</p>
+      <div class="cmd">
+        <pre><code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/rabin-a/mcp-router/master/install.sh | sh</code></pre>
+        <button type="button" id="copy" aria-live="polite">Copy</button>
+      </div>
+      <div class="then">
+        <p>List your MCP servers in <code>~/.config/mcp-router/servers.toml</code>, then add the router to Claude Code:</p>
+<pre><code>[servers.github]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-github"]
+description = "GitHub repos, issues, PRs"</code></pre>
+<pre><code>claude mcp add router -- mcp-router</code></pre>
+      </div>
+    </section>
+
+    <section aria-labelledby="how-h">
+      <h2 id="how-h">Three tools stand in for all of them</h2>
+      <p class="lede">Servers start only when a tool is first used. Tool lists are cached, so search works without starting anything.</p>
+      <dl class="tools">
+        <div style="--c: var(--c3)">
+          <dt>find_tools</dt>
+          <dd>Keyword search across every connected server. Returns the best matches with their argument schemas, stripped of noise.</dd>
+        </div>
+        <div style="--c: var(--c4)">
+          <dt>call_tool</dt>
+          <dd>Calls a tool by <code>server.tool</code> name. JSON results lose link templates, nulls and whitespace, so large results stay small enough to read inline.</dd>
+        </div>
+        <div style="--c: var(--c5)">
+          <dt>run_script</dt>
+          <dd>Sandboxed JavaScript that chains several calls in one step and returns only the answer. No files, network or imports.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="benchmark" aria-labelledby="bench-h">
+      <h2 id="bench-h">Measured in Claude Code, against six other proxies</h2>
+      <p class="lede">Each setup fronted the same 441-tool fleet and ran three tasks that call tools, twice each. Bars show the average change in tokens compared with connecting the servers directly. A task only counted if the server logs showed the work was done.</p>
+      <ul class="bench">
+        <li class="ours"><span class="name">mcp-router<small>6 of 6 tasks done</small></span>
+          <span class="track"><span class="bar less" style="width:9%"></span><span class="val l" style="--w:9%">−29%</span></span></li>
+        <li><span class="name">lazy-mcp<small>6 of 6 tasks done</small></span>
+          <span class="track"><span class="bar more" style="width:16%"></span><span class="val r" style="--w:16%">+52%</span></span></li>
+        <li><span class="name">mcp-gateway (RaiAnsar)<small>6 of 6 tasks done</small></span>
+          <span class="track"><span class="bar more" style="width:22%"></span><span class="val r" style="--w:22%">+72%</span></span></li>
+        <li><span class="name">mcp-tool-search<small>6 of 6 tasks done</small></span>
+          <span class="track"><span class="bar more" style="width:23%"></span><span class="val r" style="--w:23%">+75%</span></span></li>
+        <li><span class="name">MCPGateway<small>4 of 6 tasks done</small></span>
+          <span class="track"><span class="bar more" style="width:45%"></span><span class="val r" style="--w:45%;left:auto;right:calc(5% + .5rem);color:var(--paper)">+145%</span></span></li>
+        <li><span class="name">mcp-tool-router<small>0 of 6 tasks done</small></span>
+          <span class="track"><span class="fail">search found nothing in Claude Code</span></span></li>
+        <li><span class="name">mcp-context-proxy<small>0 of 6 tasks done</small></span>
+          <span class="track"><span class="fail">truncated results, wrong server</span></span></li>
+      </ul>
+      <div class="axis" aria-hidden="true"><span></span><div><span>fewer tokens</span><span>direct MCP</span><span>more tokens</span></div></div>
+      <ol class="findings">
+        <li>Every proxy trims the fixed cost of listing 441 tools, about 15% per request. That part is easy.</li>
+        <li>Most proxies then spend more than they save: each extra search or schema lookup is another turn that re-reads the whole conversation.</li>
+        <li>Claude Code also defers a proxy's own tools unless they set <code>anthropic/alwaysLoad</code>. mcp-router is the only one tested that does.</li>
+        <li>Result size matters most. Results over 50,000 characters are saved to a file Claude must read back; shaping JSON keeps them inline.</li>
+      </ol>
+      <p class="then">The fleet is synthetic and each cell ran twice, so treat small differences as noise. Setup, caveats, raw data and a harness to reproduce it are in <a href="https://github.com/rabin-a/mcp-router/blob/master/BENCHMARK.md">BENCHMARK.md</a>.</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>MIT licensed. Written in Rust.</span>
+    <nav aria-label="Project links" class="links"><a href="https://github.com/rabin-a/mcp-router">Source</a><a href="https://github.com/rabin-a/mcp-router/releases">Releases</a><a href="https://github.com/rabin-a/mcp-router/issues">Issues</a></nav>
+  </footer>
+</div>
+
+<script>
+  // Draw the patch-bay cables: many tool endpoints on the left, curving into three jacks.
+  (function () {
+    var g = document.getElementById("cables");
+    var colors = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)", "var(--c5)"];
+    var jacks = [90, 180, 270];
+    var n = 63, ns = "http://www.w3.org/2000/svg";
+    for (var i = 0; i < n; i++) {
+      var y = 12 + i * (316 / (n - 1));
+      var jy = jacks[Math.min(2, Math.floor(i / (n / 3)))];
+      var p = document.createElementNS(ns, "path");
+      p.setAttribute("d", "M0," + y.toFixed(1) + " C180," + y.toFixed(1) + " 230," + jy + " 387," + jy);
+      p.setAttribute("class", "cable");
+      p.setAttribute("stroke", colors[i % colors.length]);
+      p.style.setProperty("--d", (i * 14) + "ms");
+      g.appendChild(p);
+    }
+  })();
+
+  document.getElementById("copy").addEventListener("click", function () {
+    var btn = this, text = document.getElementById("install-cmd").textContent;
+    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
+      .then(function () { btn.textContent = "Copied"; })
+      .catch(function () { btn.textContent = "Select it"; })
+      .finally(function () { setTimeout(function () { btn.textContent = "Copy"; }, 2000); });
+  });
+</script>
+</body>
+</html>

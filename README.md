@@ -2,6 +2,8 @@
 
 [![ci](https://github.com/rabin-a/mcp-router/actions/workflows/ci.yml/badge.svg)](https://github.com/rabin-a/mcp-router/actions/workflows/ci.yml)
 
+**Website:** https://rabin-a.github.io/mcp-router/
+
 > **Benchmark:** six open-source MCP proxies and mcp-router, measured head-to-head
 > in Claude Code. Most proxies *increase* tokens once a tool is called; mcp-router
 > cut them 13–44% and finished every task. [Read BENCHMARK.md →](BENCHMARK.md)
