@@ -1,0 +1,64 @@
+{"cfg": "context-proxy", "task": "multi", "rep": 0, "turns": 7, "ctx_in": 230316, "output": 1454, "wall_s": 20.9, "correct": false, "n_calls": 2, "reply": "I'm blocked on the first step, so I haven't created any Jira issues. I can't yet get the full list o"}
+{"cfg": "context-proxy", "task": "github", "rep": 1, "turns": 4, "ctx_in": 147302, "output": 680, "wall_s": 12.0, "correct": false, "n_calls": 2, "reply": "Only **3** is confirmed. The tool returned 3 of the 20 open issues and ignored my label and page par"}
+{"cfg": "direct", "task": "multi", "rep": 1, "turns": 11, "ctx_in": 214229, "output": 1636, "wall_s": 18.5, "correct": true, "n_calls": 7, "reply": "6\n\nNote: all six calls returned the same ID, JIRA-4821. I didn't check whether Jira actually holds s"}
+{"cfg": "rai-gateway", "task": "single", "rep": 1, "turns": 6, "ctx_in": 179376, "output": 545, "wall_s": 11.3, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
+{"cfg": "direct", "task": "plain", "rep": 0, "turns": 1, "ctx_in": 33809, "output": 3, "wall_s": 3.0, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "rai-gateway", "task": "github", "rep": 0, "turns": 8, "ctx_in": 222990, "output": 1211, "wall_s": 16.3, "correct": true, "n_calls": 1, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "ours", "task": "plain", "rep": 0, "turns": 1, "ctx_in": 28793, "output": 3, "wall_s": 3.2, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "direct", "task": "github", "rep": 0, "turns": 5, "ctx_in": 204326, "output": 942, "wall_s": 14.2, "correct": true, "n_calls": 1, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "direct", "task": "single", "rep": 0, "turns": 3, "ctx_in": 102600, "output": 216, "wall_s": 6.6, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
+{"cfg": "rai-gateway", "task": "github", "rep": 1, "turns": 10, "ctx_in": 333310, "output": 1493, "wall_s": 25.7, "correct": true, "n_calls": 1, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "direct", "task": "multi", "rep": 0, "turns": 13, "ctx_in": 290888, "output": 1855, "wall_s": 23.1, "correct": true, "n_calls": 8, "reply": "6\n\nCaveat: every create call returned the same ID (JIRA-4821), and the list call gave no issue list "}
+{"cfg": "rai-gateway", "task": "multi", "rep": 0, "turns": 19, "ctx_in": 537031, "output": 3271, "wall_s": 40.2, "correct": true, "n_calls": 9, "reply": "6\n\nCaveat: all six create calls returned success but the same id, JIRA-4821, and the list call didn'"}
+{"cfg": "ours", "task": "plain", "rep": 1, "turns": 1, "ctx_in": 28793, "output": 3, "wall_s": 3.0, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "ours", "task": "github", "rep": 1, "turns": 3, "ctx_in": 95473, "output": 196, "wall_s": 6.8, "correct": true, "n_calls": 1, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "rai-gateway", "task": "multi", "rep": 1, "turns": 18, "ctx_in": 360154, "output": 3043, "wall_s": 33.5, "correct": true, "n_calls": 8, "reply": "6\n\nAll six calls returned `ok`, but each returned the same ID (JIRA-4821). A follow-up list call gav"}
+{"cfg": "direct", "task": "single", "rep": 1, "turns": 3, "ctx_in": 102598, "output": 215, "wall_s": 6.6, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
+{"cfg": "ours", "task": "github", "rep": 0, "turns": 3, "ctx_in": 95473, "output": 196, "wall_s": 6.7, "correct": true, "n_calls": 1, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "direct", "task": "github", "rep": 1, "turns": 4, "ctx_in": 138808, "output": 449, "wall_s": 9.2, "correct": true, "n_calls": 1, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "context-proxy", "task": "plain", "rep": 1, "turns": 1, "ctx_in": 33656, "output": 3, "wall_s": 3.4, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "context-proxy", "task": "plain", "rep": 0, "turns": 1, "ctx_in": 33656, "output": 3, "wall_s": 3.1, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "context-proxy", "task": "single", "rep": 1, "turns": 3, "ctx_in": 101850, "output": 320, "wall_s": 8.0, "correct": false, "n_calls": 1, "reply": "SENTRY-4821\n\nThe tool was described as a Jira tool, but the response says `sentry.create_issue`. Tha"}
+{"cfg": "context-proxy", "task": "single", "rep": 0, "turns": 3, "ctx_in": 101865, "output": 307, "wall_s": 8.5, "correct": false, "n_calls": 1, "reply": "SENTRY-4821\n\nThe tool's response says `sentry.create_issue`, so the issue may have been created in S"}
+{"cfg": "ours", "task": "multi", "rep": 1, "turns": 6, "ctx_in": 176929, "output": 624, "wall_s": 12.4, "correct": true, "n_calls": 8, "reply": "6"}
+{"cfg": "rai-gateway", "task": "plain", "rep": 0, "turns": 1, "ctx_in": 28231, "output": 3, "wall_s": 3.9, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "rai-gateway", "task": "single", "rep": 0, "turns": 6, "ctx_in": 184586, "output": 536, "wall_s": 9.3, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
+{"cfg": "direct", "task": "plain", "rep": 1, "turns": 1, "ctx_in": 33809, "output": 3, "wall_s": 2.8, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "rai-gateway", "task": "plain", "rep": 1, "turns": 1, "ctx_in": 28231, "output": 3, "wall_s": 4.5, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "context-proxy", "task": "github", "rep": 0, "turns": 5, "ctx_in": 192338, "output": 708, "wall_s": 13.5, "correct": false, "n_calls": 3, "reply": "3\n\nCaveat: the tool reported 20 open issues but returned only the first 3 (#1 and #2 are enhancement"}
+{"cfg": "context-proxy", "task": "multi", "rep": 1, "turns": 6, "ctx_in": 190268, "output": 1232, "wall_s": 17.3, "correct": false, "n_calls": 2, "reply": "I can't give you a count yet. Two things are blocking it:\n\n- **GitHub list is truncated.** The `list"}
+{"cfg": "ours", "task": "multi", "rep": 0, "turns": 6, "ctx_in": 176955, "output": 734, "wall_s": 11.1, "correct": true, "n_calls": 8, "reply": "6\n\nAll six create calls returned ok. They all came back with the same ID, JIRA-4821, and my follow-u"}
+{"cfg": "ours", "task": "single", "rep": 0, "turns": 3, "ctx_in": 88845, "output": 192, "wall_s": 5.4, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
+{"cfg": "ours", "task": "single", "rep": 1, "turns": 3, "ctx_in": 88845, "output": 192, "wall_s": 6.0, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
+{"cfg": "tool-search", "task": "multi", "rep": 1, "turns": 18, "ctx_in": 473869, "output": 2991, "wall_s": 32.2, "correct": true, "n_calls": 8, "reply": "6\n\nAll six create calls returned `ok`, but each returned the same ID (JIRA-4821), and I couldn't con"}
+{"cfg": "mcpgateway", "task": "github", "rep": 0, "turns": 11, "ctx_in": 424758, "output": 1499, "wall_s": 27.9, "correct": true, "n_calls": 1, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "lazy-mcp", "task": "plain", "rep": 1, "turns": 1, "ctx_in": 28191, "output": 3, "wall_s": 7.7, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "tool-router", "task": "github", "rep": 0, "turns": 5, "ctx_in": 115052, "output": 423, "wall_s": 15.0, "correct": false, "n_calls": 0, "reply": "Couldn't get the list. The tool router has no GitHub issue tools, and no other MCP resources are ava"}
+{"cfg": "mcpgateway", "task": "multi", "rep": 1, "turns": 3, "ctx_in": 62322, "output": 566, "wall_s": 11.9, "correct": false, "n_calls": 0, "reply": "I haven't created any Jira issues, so the count is 0.\n\n- **GitHub:** the `gh issue list` call for `a"}
+{"cfg": "mcpgateway", "task": "single", "rep": 0, "turns": 7, "ctx_in": 251848, "output": 799, "wall_s": 16.3, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
+{"cfg": "lazy-mcp", "task": "single", "rep": 0, "turns": 4, "ctx_in": 125543, "output": 371, "wall_s": 12.5, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
+{"cfg": "tool-router", "task": "single", "rep": 1, "turns": 4, "ctx_in": 114733, "output": 336, "wall_s": 12.8, "correct": false, "n_calls": 0, "reply": "No Jira issue was created, so there's no id to give you. I searched the tool router twice, for \"crea"}
+{"cfg": "tool-search", "task": "plain", "rep": 0, "turns": 1, "ctx_in": 28174, "output": 3, "wall_s": 6.0, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "tool-router", "task": "multi", "rep": 0, "turns": 5, "ctx_in": 86487, "output": 695, "wall_s": 19.2, "correct": false, "n_calls": 0, "reply": "0 created. I couldn't complete this.\n\n- **GitHub:** the `gh issue list` command needed approval and "}
+{"cfg": "tool-search", "task": "github", "rep": 0, "turns": 7, "ctx_in": 241229, "output": 1478, "wall_s": 22.1, "correct": true, "n_calls": 1, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "lazy-mcp", "task": "multi", "rep": 0, "turns": 16, "ctx_in": 436534, "output": 2823, "wall_s": 35.0, "correct": true, "n_calls": 9, "reply": "6\n\nAll six create calls succeeded, but each returned the same ID (JIRA-4821), and listing project EN"}
+{"cfg": "lazy-mcp", "task": "single", "rep": 1, "turns": 5, "ctx_in": 148755, "output": 459, "wall_s": 15.8, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
+{"cfg": "tool-search", "task": "github", "rep": 1, "turns": 9, "ctx_in": 319711, "output": 1372, "wall_s": 21.3, "correct": true, "n_calls": 1, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "mcpgateway", "task": "single", "rep": 1, "turns": 7, "ctx_in": 236973, "output": 636, "wall_s": 16.5, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
+{"cfg": "mcpgateway", "task": "multi", "rep": 0, "turns": 4, "ctx_in": 96087, "output": 678, "wall_s": 12.6, "correct": false, "n_calls": 0, "reply": "I can't give a count because I created no Jira issues. I'm blocked on two things:\n\n- **GitHub:** the"}
+{"cfg": "mcpgateway", "task": "github", "rep": 1, "turns": 13, "ctx_in": 440606, "output": 1767, "wall_s": 26.2, "correct": true, "n_calls": 1, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "lazy-mcp", "task": "github", "rep": 1, "turns": 8, "ctx_in": 303352, "output": 1613, "wall_s": 28.0, "correct": true, "n_calls": 2, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "tool-router", "task": "single", "rep": 0, "turns": 6, "ctx_in": 142095, "output": 471, "wall_s": 16.8, "correct": false, "n_calls": 0, "reply": "No Jira tool is available, so I couldn't create the issue. The tool-router search for \"Jira\" and \"cr"}
+{"cfg": "tool-search", "task": "plain", "rep": 1, "turns": 1, "ctx_in": 28174, "output": 3, "wall_s": 6.2, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "tool-router", "task": "github", "rep": 1, "turns": 4, "ctx_in": 114850, "output": 409, "wall_s": 14.0, "correct": false, "n_calls": 0, "reply": "I can't answer this. The MCP tool router has no GitHub tools, and two searches (\"list GitHub reposit"}
+{"cfg": "tool-router", "task": "plain", "rep": 1, "turns": 1, "ctx_in": 28180, "output": 3, "wall_s": 7.1, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "lazy-mcp", "task": "github", "rep": 0, "turns": 7, "ctx_in": 212215, "output": 1474, "wall_s": 26.2, "correct": true, "n_calls": 1, "reply": "3, 6, 9, 12, 15, 18"}
+{"cfg": "lazy-mcp", "task": "plain", "rep": 0, "turns": 1, "ctx_in": 28191, "output": 3, "wall_s": 8.6, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "mcpgateway", "task": "plain", "rep": 1, "turns": 1, "ctx_in": 28784, "output": 3, "wall_s": 6.0, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "tool-router", "task": "plain", "rep": 0, "turns": 1, "ctx_in": 28180, "output": 3, "wall_s": 7.2, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "mcpgateway", "task": "plain", "rep": 0, "turns": 1, "ctx_in": 28784, "output": 3, "wall_s": 5.8, "correct": true, "n_calls": 0, "reply": "4"}
+{"cfg": "lazy-mcp", "task": "multi", "rep": 1, "turns": 15, "ctx_in": 435083, "output": 2689, "wall_s": 35.7, "correct": true, "n_calls": 8, "reply": "6\n\nAll six calls returned `ok`, but they all gave the same ID (JIRA-4821). That may mean the tool is"}
+{"cfg": "tool-search", "task": "multi", "rep": 0, "turns": 18, "ctx_in": 471817, "output": 2828, "wall_s": 35.9, "correct": true, "n_calls": 8, "reply": "6\n\nAll six `create_issue` calls returned ok, but each one returned the same ID, JIRA-4821. A follow-"}
+{"cfg": "tool-search", "task": "single", "rep": 0, "turns": 6, "ctx_in": 178189, "output": 584, "wall_s": 12.6, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
+{"cfg": "tool-router", "task": "multi", "rep": 1, "turns": 6, "ctx_in": 138280, "output": 796, "wall_s": 16.7, "correct": false, "n_calls": 0, "reply": "I couldn't complete this, so no Jira issues were created (0).\n\n- **GitHub:** the `gh issue list` cal"}
+{"cfg": "tool-search", "task": "single", "rep": 1, "turns": 6, "ctx_in": 183369, "output": 550, "wall_s": 15.1, "correct": true, "n_calls": 1, "reply": "JIRA-4821"}
